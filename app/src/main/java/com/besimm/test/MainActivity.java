@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     BilgiGetir bilgiGetir = new BilgiGetir();
 
-    private PopupWindow pwindo;                                 //detayları görüntülemek için açılabilir pencere
+    private PopupWindow pwindo;                              //detayları görüntülemek için açılabilir pencere
 
     ArrayAdapter<String> adapter;
     ArrayAdapter<String> spinnerAdapter;
