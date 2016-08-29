@@ -1,11 +1,15 @@
 package com.besimm.test;
 
+import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Point;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.Settings;
 import android.support.design.widget.CoordinatorLayout;
@@ -25,6 +29,7 @@ import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -33,6 +38,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.support.design.widget.Snackbar;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.android.gms.appindexing.Action;
+import com.google.android.gms.appindexing.AppIndex;
+import com.google.android.gms.common.api.GoogleApiClient;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -46,6 +61,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -55,29 +71,53 @@ import javax.xml.parsers.ParserConfigurationException;
 
 public class MainActivity extends AppCompatActivity {
 
-    ListView listView;
+
+    final String[] ilkTarih = new String[1];
+    final String[] ikinciTarih = new String[1];
+
+    final String[] dayOfMonthSon = new String[1];
+    final String[] monthOfYearSon = new String[1];
+
+
+    final int[] secilenGun = {0};
+    final int[] secilenAy = {0};
+    final int[] secilenYil = {0};
+
+    final int[] secilenAySon = new int[1];
+    final int[] secilenGunSon = new int[1];
+    final int[] secilenYilSon = new int[1];
+
 
     Context mContext;
 
 
-    String apiUrl = "http://androidapitest.somee.com/api/Hareketler/getName/?type=xml";
-    String apiUrl2 = "http://androidapitest.somee.com/api/Hareketler/getName2/?type=xml";
-    String apiUrl3 = "http://androidapitest.somee.com/api/Hareketler/GetSenetHareketleriDemo/?type=xml";
+    DatePicker datePicker, datePicker2;
+    DatePicker datePickerapi19, datePickerapi19_2;
+
+
+    Button donemSec;
+
+    String apiUrl = "http://10.0.2.2/api/Tablolar/GetSenetHareketleriDemo/?type=xml";
+    String apiUrl2 = "http://10.0.2.2/api/Hareketler/GetSenetHareketleriDemo/?type=xml";
+    String apiUrl3 = "http://10.0.2.2/api/Hareketler/GetSenetHareketleriDemo/?type=xml";
     Spinner spinner;
 
-    BilgiGetir bilgiGetir = new BilgiGetir();
+
+    Calendar calendar = Calendar.getInstance();
+
+    BilgiGetir bilgiGetir = new BilgiGetir();                //secilen tablonun bilgilerinin cekileceği class (bundan her tablo için olmalı)
 
     private PopupWindow pwindo;                              //detayları görüntülemek için açılabilir pencere
 
-    ArrayAdapter<String> adapter;
-    ArrayAdapter<String> spinnerAdapter;
+    ArrayAdapter<String> adapter;                            //api den gelen sonucları set edeceğimiz adapter
+    ArrayAdapter<String> spinnerAdapter;                     //api de bulunan tabloları set edeceğimiz adapter
 
     // String apiUrl="http://www.tcmb.gov.tr/kurlar/today.xml";
 
-    List<String> sonuclar = new ArrayList<String>();
-    List<String> spinnerSonuclar = new ArrayList<String>();
+    List<String> sonuclar = new ArrayList<String>();               // apiden ilgili tablodan gelen sonuclar
+    List<String> spinnerSonuclar = new ArrayList<String>();        //tablo isimleri (api'den değil android tarafından)
     HttpURLConnection baglanti = null;
-    private ProgressDialog progressDialog;
+    private ProgressDialog progressDialog;                    //gelen sonucların detaylarını göstermek için popup pencere
 
 
     @Override
@@ -85,88 +125,110 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        listView = (ListView) findViewById(R.id.listView);
-        spinner = (Spinner) findViewById(R.id.spinner);
+        secilenAy[0]=calendar.get(Calendar.MONTH)+1;
+        secilenGun[0]=calendar.get(Calendar.DAY_OF_MONTH);
+        secilenYil[0]=calendar.get(Calendar.YEAR);
 
-        Button baglan = (Button) findViewById(R.id.ınternetBaglan);
+        secilenAySon[0]=secilenAy[0];
+        secilenYilSon[0]=secilenYil[0];
+        secilenGunSon[0]=secilenGun[0];
 
-        if (!InternetBaglantiKontrol()) {
+        datePickerapi19 = (DatePicker) findViewById(R.id.ilkTarihapi19);
+        datePickerapi19_2 = (DatePicker) findViewById(R.id.ikinciTarihapi19);
 
-            baglan.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
-                }
-            });
+
+        datePicker = (DatePicker) findViewById(R.id.ilkTarih);
+        datePicker2 = (DatePicker) findViewById(R.id.ikinciTarih);
+
+
+        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+        if (currentapiVersion < android.os.Build.VERSION_CODES.LOLLIPOP) {
+
+            datePicker.setVisibility(View.GONE);
+            datePicker2.setVisibility(View.GONE);
+            datePickerapi19.setVisibility(View.VISIBLE);
+            datePickerapi19_2.setVisibility(View.VISIBLE);
+
+
+        } else {
+            datePickerapi19.setVisibility(View.GONE);
+            datePickerapi19_2.setVisibility(View.GONE);
+            datePicker.setVisibility(View.VISIBLE);
+            datePicker2.setVisibility(View.GONE);
+
+        }
+
+
+        spinner = (Spinner) findViewById(R.id.spinner);        //tabloları listeleyeceğimiz spinner
+
+        donemSec = (Button) findViewById(R.id.donemSec);
+
+        donemSec.setOnClickListener(DonemSec);
+        datePickerapi19.init(datePickerapi19.getYear(), datePickerapi19.getMonth(), datePicker2.getDayOfMonth(), new DatePicker.OnDateChangedListener() {
+            @Override
+            public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                secilenGun[0] = dayOfMonth;
+                secilenAy[0] = monthOfYear;
+                secilenYil[0] = year;
+
+            }
+        });
+
+        datePickerapi19_2.init(datePickerapi19_2.getYear(), datePickerapi19_2.getMonth(), datePickerapi19_2.getDayOfMonth(), new DatePicker.OnDateChangedListener() {
+            @Override
+            public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                secilenAySon[0] = monthOfYear;
+                secilenGunSon[0] = dayOfMonth;
+                secilenYilSon[0] = year;
+
+
+            }
+        });
+
+        datePicker.init(datePicker.getYear(), datePicker.getMonth(), datePicker.getDayOfMonth(), new DatePicker.OnDateChangedListener() {
+            @Override
+            public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+
+
+                secilenGun[0] = dayOfMonth;
+                secilenAy[0] = monthOfYear;
+                secilenYil[0] = year;
+
+
+                datePicker.setVisibility(view.GONE);
+                datePicker2.setVisibility(view.VISIBLE);
+
+                InitalizeDatePicker2(secilenYil[0], secilenAy[0], secilenGun[0]);
+
+            }
+        });
+
+
+        if (!InternetBaglantiKontrol()) {                      //internet bağlantısı kontrolu (burası daha stabil olmalı)
+
+            startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
         } else {
 
 
-            //   final CoordinatorLayout bildiDetay = (CoordinatorLayout) findViewById(R.id.bilgiDetay);
-
-
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-
-                    Toast.makeText(MainActivity.this, sonuclar.get(position), Toast.LENGTH_SHORT).show();
-
-
-
-/*
-               Snackbar.make(bildiDetay, sonuclar.get(position), Snackbar.LENGTH_LONG)
-                        .setAction(null, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-
-                            }
-                        }).show();
-
-*/
-
-                    List<String> tümSonuclar = new ArrayList<String>();
-                    String item = null;
-                    try {
-                        tümSonuclar = bilgiGetir.GetTumBilgiler();
-                        item = tümSonuclar.get(position);
-                    } catch (Exception e) {
-                        e.getStackTrace();
-                    }
-
-                    String[] parts = item.split(",");
-                    Toast.makeText(MainActivity.this, parts[0], Toast.LENGTH_SHORT).show();
-                    PopUp(parts, mContext);
-
-
-                }
-            });
-
-
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {  //bilgisi görüntülenmek istenen tablo'nun secimi
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-                    Toast.makeText(MainActivity.this, spinnerSonuclar.get((int) id), Toast.LENGTH_SHORT).show();
 
                     switch (position) {
 
                         case (0): {
-
-                            Toast.makeText(MainActivity.this, "Lütfen Seçim Yapınız...", Toast.LENGTH_SHORT).show();
                             break;
                         }
                         case (1): {
-                            Toast.makeText(MainActivity.this, "1. Seçim", Toast.LENGTH_SHORT).show();
-                            new GetInfos().execute(apiUrl, "ArayuzModel");
-                            break;
-                        }
+                            new GetInfos().execute(apiUrl, "ArayuzModel");           //secilen tablonun url'si ve tagı yollanarak
+                            break;                                                   //doInBackGround metodunda verilerin alınması sağlanıyor
+                        }                                                            //apiUrl ve ArayuzModel gonderilir (metod içinda params olarak alınır)
                         case (2): {
-                            Toast.makeText(MainActivity.this, "2. Seçim", Toast.LENGTH_SHORT).show();
                             new GetInfos().execute(apiUrl2, "ArayuzModel2");
                             break;
                         }
                         case (3): {
-                            Toast.makeText(MainActivity.this, "Demo secim", Toast.LENGTH_SHORT).show();
                             new GetInfos().execute(apiUrl3, "SenetHareketleriDemo");
                             break;
                         }
@@ -183,43 +245,87 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
-            spinnerSonuclar.add("Lütfen Seçim Yapınız");
+            spinnerSonuclar.add("Lütfen Seçim Yapınız");                     //spinner'a tablolar ekleniyor
             spinnerSonuclar.add("Seçim 1");
             spinnerSonuclar.add("Seçim 2");
-            spinnerSonuclar.add("Demo secimi");
+            spinnerSonuclar.add("Senet Hareketleri");
             spinnerSonuclar.add("Spinner2");
             spinnerSonuclar.add("Spinner3");
             spinnerSonuclar.add("Spinner1");
             spinnerSonuclar.add("Spinner2");
 
 
-            spinnerAdapter = new ArrayAdapter<String>(MainActivity.this, R.layout.support_simple_spinner_dropdown_item, spinnerSonuclar);
-            spinner.setAdapter(spinnerAdapter);
+            spinnerAdapter = new ArrayAdapter<String>(MainActivity.this, R.layout.support_simple_spinner_dropdown_item, spinnerSonuclar);   //olusturulan arraylist türünden spinnera aktivity icerisinde olusturuşuyor ve liste(spinner sonuclar )eklenıyor
+            spinner.setAdapter(spinnerAdapter);                                                                                             //adaptere spinner set ediliyor
 
 
         }
+
     }
 
-    private class GetInfos extends AsyncTask<String, Void, List<String>> {
+    private void InitalizeDatePicker2(final int secilenYil, final int secilenAy, final int secilenGun) {
+
+        final int[] textAy = {0};
+        final int[] textAy2 = {0};
+        datePicker2.init(datePicker2.getYear(), secilenAy, secilenGun, new DatePicker.OnDateChangedListener() {
+            @Override
+            public void onDateChanged(final DatePicker view, final int year, final int monthOfYear, final int dayOfMonth) {
+
+                textAy[0] = secilenAy + 1;
 
 
+                secilenAySon[0] = monthOfYear;
+                secilenGunSon[0] = dayOfMonth;
+                secilenYilSon[0] = year;
+
+                donemSec.setText(secilenGun + "/" + secilenAy + "/" + secilenYil + " --" + dayOfMonth + "/" + textAy[0] + "/" + year);
+                datePicker.updateDate(secilenYil, secilenAy, secilenGun);
+                datePicker.setVisibility(view.VISIBLE);
+                if (secilenAy < monthOfYear || secilenAy > monthOfYear) {
+                    datePicker.setVisibility(View.GONE);
+                }
+
+                datePicker2.init(year, monthOfYear, dayOfMonth, new DatePicker.OnDateChangedListener() {
+                    @Override
+                    public void onDateChanged(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
+                        if (secilenAy < monthOfYear || secilenAy > monthOfYear) {
+                            datePicker.setVisibility(View.GONE);
+                        }
+                        textAy2[0] = monthOfYear + 1;
+                        donemSec.setText(secilenGun + "/" + secilenAy + "/" + secilenYil + " --" + dayOfMonth + "/" + textAy2[0] + "/" + year);
+                        secilenAySon[0] = monthOfYear;
+                        secilenGunSon[0] = dayOfMonth;
+                        secilenYilSon[0] = year;
+
+                    }
+                });
+
+
+            }
+        });
+    }
+
+
+    private class GetInfos extends AsyncTask<String, Void, List<String>> {      //verilerin arka planda getirilmesi için method
+        //** AysnTasck'dan exdens ediliyor
+        //**doInBacground bulunmak zorunda
         @Override
+        //** aldıgı 3.parametre doInBackground için gerekli bilgiler
         protected void onPreExecute() {
 
             super.onPreExecute();
-
-            showProgressDialog("", "Lütfen biraz bekleyin");
+            showProgressDialog("", "Lütfen biraz bekleyin");                    //veriler getirilirken kullanıcıya bilgi vermek için method
 
 
         }
 
         @Override
-        protected List<String> doInBackground(String... params) {
+        protected List<String> doInBackground(String... params) {              // gerekli bilgiler params ile alınıyor (apiUrl, etiketAdi)
             try {
-                //  BilgileriDoldur();
 
-                sonuclar = bilgiGetir.BilgileriDoldur(params[0], params[1], baglanti);
-                adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_expandable_list_item_1, sonuclar);
+
+                sonuclar = bilgiGetir.BilgileriDoldur(params[0], params[1], baglanti);          //apiUrl ve etkeTadi bilgiGetir class'ının BilgileriDoldur metoduna set ediliyor
+                adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_expandable_list_item_1, sonuclar);   //gelen sonuclar adaptere ekleniyor
 
 
             } catch (XmlPullParserException e) {
@@ -231,11 +337,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onPostExecute(List<String> Result) {
+        protected void onPostExecute(List<String> Result) {               //doInBackground işlemi bittikten sonra calısacak method
 
-            listView.setAdapter(adapter);
+
             // spinner.setAdapter(spinnerAdapter);
-            if (progressDialog != null && progressDialog.isShowing()) {
+            if (progressDialog != null && progressDialog.isShowing()) {   //progresdialog sonlandırılıyor
                 progressDialog.dismiss();
             }
 
@@ -247,13 +353,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void showProgressDialog(String title, String message) {
         progressDialog = new ProgressDialog(this);
-
         progressDialog.setTitle(title); //title
-
         progressDialog.setMessage(message); // message
-
         progressDialog.setCancelable(false);
-
         progressDialog.show();
     }
 
@@ -283,10 +385,9 @@ public class MainActivity extends AppCompatActivity {
             btnClosePopup = (Button) layout.findViewById(R.id.btn_close_popup);
             listViewTumVeriler = (ListView) layout.findViewById(R.id.listViewTumVeriler);
 
-            for (int j = 0; j < 5; j++) {
-                for (int i = 0; i < parts.length; i++) {
-                    tumSonuclar.add(parts[i]);
-                }
+
+            for (int i = 0; i < parts.length; i++) {
+                tumSonuclar.add(parts[i]);
             }
 
 
@@ -316,4 +417,43 @@ public class MainActivity extends AppCompatActivity {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
 
     }
+
+    private View.OnClickListener DonemSec = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            secilenAy[0] += 1;
+            secilenAySon[0] += 1;
+            String castEdilenAy = String.valueOf(secilenAy[0]);
+            String castEdilenAy2 = String.valueOf(secilenAySon[0]);
+            String castEdilenGun = String.valueOf(secilenGun[0]);
+            String castEdilenGun2 = String.valueOf(secilenGunSon[0]);
+
+            if (secilenAy[0] < 10) {
+                castEdilenAy = "0" + String.valueOf(secilenAy[0]);
+            }
+            if (secilenAySon[0] < 10) {
+                castEdilenAy2 = "0" + String.valueOf(secilenAySon[0]);
+            }
+            if (secilenGun[0] < 10) {
+                castEdilenGun = "0" + String.valueOf(secilenGun[0]);
+            }
+
+            if (secilenGunSon[0] < 10) {
+                castEdilenGun2 = "0" + String.valueOf(secilenGunSon[0]);
+            }
+
+            ilkTarih[0] = String.valueOf(secilenYil[0] + "" + castEdilenAy + "" + castEdilenGun);
+            ikinciTarih[0] = String.valueOf(secilenYilSon[0] + "" + castEdilenAy2 + "" + castEdilenGun2);
+
+            donemSec.setText(ilkTarih[0] + ikinciTarih[0]);
+            Intent ogrTaksitHareketleri = new Intent(MainActivity.this, GetOgrTaksitHareketleri.class);
+            ogrTaksitHareketleri.putExtra("ilkTarih", ilkTarih[0]);
+            ogrTaksitHareketleri.putExtra("ikinciTarih", ikinciTarih[0]);
+            startActivity(ogrTaksitHareketleri);
+
+            datePicker2.setVisibility(View.GONE);
+            datePicker.setVisibility(View.GONE);
+        }
+    };
 }

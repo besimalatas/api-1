@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/uyari"
+    android:background="#212121">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="İnternet Bağlantınızı Kontrol Ediniz!"
+        android:id="@+id/baglantiUyari"
+        android:textSize="15dp"
+        android:layout_marginTop="70dp"
+        android:textColor="#E14036"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tamam"
+        android:id="@+id/uyariTamam"
+        android:layout_below="@+id/baglantiUyari"
+        android:layout_alignEnd="@+id/baglantiUyari"
+        android:background="#212121"
+        android:textColor="#E14036"/>
+</RelativeLayout>

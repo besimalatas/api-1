@@ -1,50 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#212121"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:id="@+id/layout"
     tools:context="com.besimm.test.MainActivity">
 
-    <Spinner
-        android:id="@+id/spinner"
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:gravity="center"
-        android:textAlignment="gravity"></Spinner>
-
-    <ListView
-        android:id="@+id/listView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/spinner"
-        android:layout_centerHorizontal="true" />
-
-    <android.support.design.widget.CoordinatorLayout
-        android:id="@+id/bilgiDetay"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_height="wrap_content">
 
 
-        >
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textAlignment="gravity"></Spinner>
 
-    </android.support.design.widget.CoordinatorLayout>
+    </LinearLayout>
 
-    <Button
+
+    <DatePicker
+        android:id="@+id/ilkTarih"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Bağlan"
-        android:id="@+id/ınternetBaglan"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_below="@id/linearLayout"
+        android:layout_centerHorizontal="true"
+        android:headerBackground="#E14036"
+
+        />
+
+    <DatePicker
+        android:id="@+id/ikinciTarih"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/linearLayout"
+        android:layout_centerHorizontal="true"
+        android:headerBackground="#E14036" />
+
+    <DatePicker
+        android:id="@+id/ilkTarihapi19"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/linearLayout"
+        android:layout_centerHorizontal="true"
+        android:calendarViewShown="false"
+        android:headerBackground="#E14036"
+        android:datePickerMode="spinner"
+
+        />
+
+    <DatePicker
+        android:id="@+id/ikinciTarihapi19"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:calendarViewShown="false"
+        android:datePickerMode="spinner"
+        android:headerBackground="#E14036"
+        android:layout_above="@+id/donemSec"
+        android:layout_alignStart="@+id/ilkTarihapi19" />
+
+    <Button
+        android:id="@+id/donemSec"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:background="?android:attr/selectableItemBackground"
+        android:gravity="end|center"
+        android:text="Lütfen Tarih Aralığı Giriniz"
+        android:textColor="#E14036" />
+
 
 
 </RelativeLayout>

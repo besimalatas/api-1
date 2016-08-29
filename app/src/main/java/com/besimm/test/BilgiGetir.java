@@ -69,23 +69,26 @@ public class BilgiGetir {
 
                     Element element = (Element) nodeList.item(i);
 
-                    NodeList nodeListKod = element.getElementsByTagName("kod");
+
                     NodeList nodeListUnvan = element.getElementsByTagName("unvan");
-                    NodeList nodeListKayitNo = element.getElementsByTagName("kayitNo");
                     NodeList nodeListVade = element.getElementsByTagName("vade");
-                    NodeList nodeListTaksitTutari = element.getElementsByTagName("taksitTutari");
-                    NodeList nodeListDonemi = element.getElementsByTagName("donemi");
+                    NodeList nodeListVadeSonu = element.getElementsByTagName("vadeSonu");
+                    NodeList nodeListOdenen = element.getElementsByTagName("odenen");
+                    NodeList nodeListKalan = element.getElementsByTagName("kalan");
+                    NodeList nodeListVadeYazi = element.getElementsByTagName("vadeYazi");
+                    NodeList nodeListAciklama = element.getElementsByTagName("aciklama");
 
-                    String kod = nodeListKod.item(0).getFirstChild().getNodeValue();
-                    String unvan = nodeListUnvan.item(0).getFirstChild().getNodeValue();
-                    String kayitNo = nodeListKayitNo.item(0).getFirstChild().getNodeValue();
                     String vade = nodeListVade.item(0).getFirstChild().getNodeValue();
-                    String taksitTutari = nodeListTaksitTutari.item(0).getFirstChild().getNodeValue();
-                    String donemi = nodeListDonemi.item(0).getFirstChild().getNodeValue();
+                    String unvan = nodeListUnvan.item(0).getFirstChild().getNodeValue();
+                    String vadeSonu = nodeListVadeSonu.item(0).getFirstChild().getNodeValue();
+                    String odenen = nodeListOdenen.item(0).getFirstChild().getNodeValue();
+                    String kalan = nodeListKalan.item(0).getFirstChild().getNodeValue();
+                    String vadeYazi = nodeListVadeYazi.item(0).getFirstChild().getNodeValue();
+                    String aciklama = nodeListAciklama.item(0).getFirstChild().getNodeValue();
 
-                    sonuclar.add(kod + " " + unvan + " " + kayitNo + " " + " " + vade);
-                    tumBilgiler.add("Kodu: " + kod + "," + "Ünvanı" + unvan + "," + kayitNo +
-                            "," + " " + vade + "," + taksitTutari + "," + donemi);
+                    sonuclar.add(unvan + " " + aciklama);
+                    tumBilgiler.add("Unvanı : " + unvan + "," + "Vadesi :" + vade + "," + " Vade Sonu :" + vadeSonu +
+                            "," + "Odenen :" + odenen + "," + "Kalan :" + kalan + "," + "Vade Yazi :" + vadeYazi + "," + "Açıklama :" + aciklama);
 
 
                 }
