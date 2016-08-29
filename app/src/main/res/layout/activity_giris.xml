@@ -77,7 +77,7 @@
                     android:textSize="16dp" />
 
                 <android.support.v7.widget.AppCompatButton
-                    android:id="@+id/btn_giris"
+                    android:id="@+id/giris"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="24dp"
